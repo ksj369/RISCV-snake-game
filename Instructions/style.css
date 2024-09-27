@@ -1,0 +1,145 @@
+
+@media only screen and (min-width:1120px){
+        /* styles for browsers larger than 1120px; */
+iframe{
+    width:100%;
+    height: 2120px;
+    border: 0;
+    overflow: hidden;
+    margin-left:0;
+
+    }
+}
+
+ @media only screen and (min-width:960px) and (max-width:1120px){
+        /* styles for browsers larger than 960px but smaller than 1120px; */
+iframe{
+    width:100%;
+    height: 2290px;
+    border: 0;
+    overflow: hidden;
+    margin-left:0;
+
+    }
+ }
+
+ @media only screen and (min-width:795px) and (max-width:960px){
+        /* styles for browsers larger than 800px but smaller than 960px; */
+iframe{
+    width:100%;
+    height: 2460px;
+    border: 0;
+    overflow: hidden;
+    margin-left:0;
+
+    }
+ }
+
+  @media only screen and (min-width:740px) and (max-width:795px){
+        /* styles for browsers larger than 600px but smaller than 800px; */
+iframe{
+    width:100%;
+    height: 2600px;
+    border: 0;
+    overflow: hidden;
+    margin-left:0;
+
+    }
+  }
+
+   @media only screen and (min-width:700px) and (max-width:740px){
+        /* styles for browsers larger than 600px but smaller than 800px; */
+iframe{
+    width:100%;
+    height: 2770px;
+    border: 0;
+    overflow: hidden;
+    margin-left:0;
+
+    }
+   }
+
+    @media only screen and (min-width:630px) and (max-width:700px){
+       /* styles for browsers smaller than 768px but larger than 620px  */
+       iframe{
+    width:100%;
+    height:3000px;
+    border: 0;
+    
+    }
+}
+
+   @media only screen and (min-width:550px) and (max-width:630px){
+       /* styles for browsers smaller than 630px but larger than 550px  */
+       iframe{
+    width:100%;
+    height:3270px;
+    border: 0;
+    
+    }
+}
+ @media only screen and (min-width:480px) and (max-width:550px){
+       /* styles for browsers smaller than 550px but larger than 480px  */
+       iframe{
+    width:100%;
+    height:3560px;
+    border: 0;
+    
+    }
+}
+ @media only screen and (min-width:415px) and (max-width:480px){
+       /* styles for browsers smaller than 480px but larger than 415px*/
+       iframe{
+    width:100%;
+    height:3880px;
+    border: 0;
+    
+    }
+}
+ @media only screen and (max-width:415px){
+       /* styles for browsers smaller than 415px  */
+       iframe{
+    width:100%;
+    height:5000px;
+    border: 0;
+    
+    }
+}
+
+h1 {
+	font-size:40px;
+}
+h2 {
+	font-size:30px;
+}
+h3 {
+	font-size:20px;
+	font-style:italic;
+}
+h4 {
+	font-size:16px;
+	font-style:bold;
+}
+
+p {
+	margin-left:auto;
+	margin-right:auto;
+}
+code {
+	font-family:"Courier New", Courier, monospace;
+	color: #222222;
+}
+.uniqueimg {
+	float:left;
+	margin: 0 15px 15px 0;
+	padding: 5px;
+	border: 1px solid #aaa;
+}
+.right {
+	float:right;
+	margin-left: 1rem;
+}
+ul {
+	max-width:700px;
+	margin-right:auto;
+}

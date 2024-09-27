@@ -1,0 +1,824 @@
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <noscript>
+    <meta http-equiv="refresh" content="0;url=noscript.html">
+  </noscript>
+  <script src="../../css_files/jquery.min.js"></script>
+  <script src="../../css_files/jquery-ui.min.js"></script>
+  <script src="../../css_files/bootstrap.min.js"></script>
+  <script src="../../css_files/main.js"></script>
+  <link href="../../css_files/bootstrap.min.css" rel="stylesheet">
+  <link href="../../css_files/custom.css" rel="stylesheet">
+  <link href="../../css_files/font-awesome.min.css" rel="stylesheet">
+  <link href="../../css_files/jquery-ui.min.css" rel="stylesheet">
+  
+  
+  <div class="banner container-fluid"><div class="container banner-logo">
+    <a href="http://www.ualberta.ca/"><img src="../../css_files/logo-reverse.png"></a>
+  </div></div>
+  
+  <div class="container-fluid">
+    <h2 class="greentext">CMPUT 229 - Computer Organization and Architecture I</h2>
+    <h3 class="greentext">Lab 5: Snake Game</h3>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <title>229 Lab 5: Snake Game</title>
+  </div>
+  </head>
+  
+  
+  
+  <div class = "container-fluid">
+  
+  <h2 class = "greentext"> Introduction </h2>
+  
+  <p> This lab focuses on using interruptions to create a snake game. 
+      The player should control the snake to eat as many apples as possible 
+      within the time limit. For the display and countdown purpose, we use the 
+      Memory Mapped device and timer tool on RARS. The exception handler used to 
+      manage these exceptions is created by the student.  </p>
+  
+  <h2 class = "greentext"> Background</h2>
+  
+  
+  <p> There are different kinds of snake games. To keep the complexity
+      of implementing this lab manageable, this snake game is simpler
+      than other ones available online. Here is one snake game, which is
+      similar to this lab, to help you become familiar with the
+      concept.</p>
+    
+    <ul>
+    <li>  <a href = "https://www.google.com/fbx?fbx=snake_arcade" target = "blank"> google snake game </a> </li>
+  </ul>
+  </p>
+  
+  <p> The level of play --- easy, medium, and hard --- must be selected
+      before the game begins. The level determines the amount of
+      starting time as well as the bonus time awarded after the snake
+      eats an apple. The goal of the game is for the player to control
+      the snake to eat as many apples as possible. </p>
+  
+  <h2 class = "greentext"> Goal </h2>
+  
+  <p> The goal of this lab is for students to become familiar with the
+    concepts of interruptions and exceptions, to gain practical experience 
+    programming an exception handler in RISC-V, and to improve their programming skills.  </p>
+  
+  <h2 class = "greentext"> The Snake Game </h2>
+  
+  <p> In this snake game the player starts with an initial time budget to control the snake. 
+      When the time is up or the snake hits a wall, the game is over. Whenever the player 
+      leads the snake to eat an apple, they are awarded bonus time. </p>
+  
+  <p> The game has three levels and both the initial time budget and the
+      bonus time are determined by the level selected at the start of
+      the game. In this lab the following times should be used:
+  
+  <table style="width:100%">
+    <tr>
+      <th>  Game Level  </th>
+      <th>  Initial Time Budget(seconds)  </th> 
+      <th>  Bonus Time(seconds)  </th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>120</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>30</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>15</td>
+      <td>3</td>
+    </tr>
+    </table>
+    </p>
+    
+  
+  <h2 class = "greentext"> Assignment </h2>
+  
+  <p> To create this simple snake game in RISC-V, write a program that
+    reads commands from the keyboard input, handles timer interrupts and
+    manages the display output.  The snake game uses two screens for
+    display. One screen is displayed after the other. After the start screen, there 
+    will be the game screen. 
+  <ul>
+    
+    <li> <b>Preparation screen</b>: asks the player which level they
+         would like to play: 1, 2 or 3. The screen waits until the
+         number <code>1 2 or 3</code> is recognized.  There is no need
+         for the player to type enter. Once your program recognizes one
+         of the three numbers the game begins.  </li> 
+  
+    <li> <b>Game screen</b>: First, display the walls to form a
+         square. The apples should appear within this square and the
+         game immediately ends if the snake runs into these walls. Then
+         display an apple within the square which the snake should
+         eat. The coordinate of the apple is randomly generated. At the
+         beginning of the game, the snake should be approximately in the center of the
+         square and move to the right automatically. <b>The snake moves 
+         forward by one unit every second</b>. The player can change the snake's 
+         direction by entering different valid commands. The player can control 
+         the snake to move up, left, down, and right by pressing the W, A, S, and D keys on the
+         keyboard, respectively. Whenever the snake eats an apple, the player gets
+         a point and a new apple is generated. This screen also
+         displays the score the player has earned and the remaining time
+         that the player has to play.  </li>
+  
+       </ul>
+  
+    <b>Note:</b> The handler should not use the user stack or the user
+    stack pointer. Therefore, if calling functions inside the handler,
+    you must manage a separate handler stack. Do not call functions
+    inside the handler.
+    
+    </p>
+    
+    <h3 class = "greentext"> Input</h3>
+    
+    <p> There are two inputs to the game, both provided by interruptions:
+  
+         <ul>
+  
+     <li> <b>Keyboard input</b>: a keyboard interrupt occurs when
+                the player types a character in the keyboard section of
+                the <code> Keyboard and Display MMIO Simulator</code>.
+                Once the typed character is one of w, a, s, and d, the snake should 
+                change its moving direction accordingly.</li>
+  
+    
+          
+      <li>  <b>Timer input</b>: The other input is from the timer
+        tool in RISC-V. Students should program the timer so that an
+        interrupt is generated every second so that the time displayed 
+        can be updated and the snake can move forward by one unit every second. </li> 
+       </ul>
+  
+  
+       Repetition of the positions of the apple throughout the game is permissible as long as the random-number
+    generator is working correctly.  </p>
+      
+  
+  
+       <h2 class = "greentext" id="EXECUTION">Example Execution</h2>
+  
+       <h3 class = "greentext">The game ends when the snake hits a wall</h3>
+       <img src="images/demo1.gif" width="50%">
+       <h3 class = "greentext">The game ends when time is up</h3>
+       <img src="images/demo2.gif" width="50%">
+  
+  
+  
+       <h2 class = "greentext"> More Details About This Game</h2>
+  
+       <h3 class = "greentext"> Square </h3> <p>The square has 11 rows
+       and 21 columns(including the rows and columns for the walls).
+       The numbers of the rows and the columns are not the same to
+       account for the different horizontal and vertical gaps between
+       characters on the screen. The goal it to produce a window that
+       appears approximately square for the player. See this <a
+       href="#EXECUTION">Example Execution</a>).  Given that the indices
+       of the rows and columns start at 0, the walls are displayed in
+       row 0, row 10, column 0, and column 20. The snake moves in rows
+       1-9 and columns 1-19. The character <code>#</code> is used to
+       represent a brick on the wall. Once the walls are displayed they
+       never change.</p>
+  
+       <h3 class = "greentext"> Apple </h3>
+       
+       <p>To place an apple inside the square generate two random
+         numbers: one for row and another for column(You should invoke the random functions twice to 
+         get these two random numbers). These numbers
+         must be within the range of the area where the snake can
+         move. The character <code>a</code> represents an apple. Once
+         the current apple is eaten by the snake, a new apple should be
+         generated.</p>
+        
+       <h3 class = "greentext"> Snake </h3>
+       
+       
+        <p>A single character <code>@</code> represents the head of the
+          snake and three <code>*</code> characters represent the body
+          of the snake. In the beginning, the snake is approximately in
+          the center of the square, and it moves to the right
+          automatically as soon as the game starts(You can refer to the
+          <a href="#EXECUTION">Example Execution</a>). <b>The snake should 
+          move forward by one unit every second</b>. The player can
+          control the snake to move up, left, down, and right by
+          pressing the <tt>w</tt>, <tt>a</tt>, <tt>s</tt>,
+          <tt>d</tt>. The characters <tt>W</tt> , <tt>A</tt> ,
+          <tt>S</tt> , <tt>D</tt> are not accepted as valid commands to
+          the game. If the player doesn't give any commands, the snake
+          keeps moving in the same direction until it hits a wall.  When
+          the snake eats an apple, the player gets one point and bonus
+          time. <b>To make this lab simpler, the size of the snake does not
+          increase</b>. If the snake hits a wall, the game ends. In this
+          game, we ignore the situation when the snake hits its own
+          body. Thus, the player should avoid this situation as best as
+          they can.</p>
+  
+          <h3 class = "greentext"> Bonus Time Behavior </h3>
+          <p>Adding the bonus time to the remaining time is a bit tricky. Suppose the level of the current game is level 2(bonus time is 5s), 
+            the snake is about to eat an apple next second, and the remaining time is now 20s. When the snake eats an apple, 
+            it will have spent 1s moving to the position of the apple. As a result, the new remaining time should be 20 - 1 + 5 = 24 seconds.
+          </p>
+  
+  
+          <h3 class = "greentext"> The End of The Game </h3>
+  
+          <p>When the game ends, the snake should stop moving, and the
+          countdown should stop.</p>
+  
+  
+  <h2 class="greentext">Interrupts</h2>
+  <h3 class="greentext">Cause and Status Register</h3>
+  
+    <p>This lab uses external interrupts from hardware. The role of four CSRs (Control 
+      and Status Registers) are important for the use of interrupts:</p>
+    <img src="images/causeReg.png" class="right">
+    <ul>
+      <li><code>ustatus</code> (User Status Register, <code>CSR#0</code>) is a 32-bit 
+        register that controls and manages user-level interrupts in the hardware thread 
+        (<i>hart</i>). To enable user-level interrupts set the 0th bit of this register 
+        to 1.</li>
+      <li><code>uie</code> (User-Interrupt Enable Register, <code>CSR#4</code>) is a 32-bit 
+        register that controls the types of interrupts that are enabled using a bitmask. 
+        Bits 4 and 8 are relevant for this lab. The 4th enables user-level timer interrupts. 
+        The 8th bit enables user-level external interrupts. These bits must be set to 1 to 
+        enable interrupts from the timer and the keyboard.</li>
+      <li><code>utvec</code> (User Trap-Vector Base-Address Register, <code>CSR#5</code>) 
+        is a 32-bit register that controls where interrupts are handled. The register 
+        holds the address of the interrupt handler that should be called when an interrupt 
+        or exception occurs.</li>
+      <li><code>ucause</code> (User Trap Cause Register, <code>CSR#66</code>) is a 32-bit 
+        register that identifiies which type of interrupt is being handled. After an exception or 
+        an interrupt, this register holds the interrupt/exception code to help identify 
+        its cause. An exception code is stored in the first 31 bits of ucause and the
+        last bit indicates whether or not it was an interrupt or an exception. To 
+        check what type of exception/interrupt occurred refer to the table. </li>
+    </ul>
+    <p>These CSRs can be set by using the CSR instructions. For example, to enable 
+      user-level interrupts in <code>ustatus</code> use "CSR Read/Write Immediate" 
+      instruction: <code>csrrwi zero, 0, 0x1</code>. Or use pseudo-instructions to read 
+      and write to the CSR registers. For example:</p>
+    <code> <br />
+      csrr    t0, 4 &nbsp # read from CSR#4 to t0 <br />
+      csrw    t0, 6 &nbsp # write whats in t0 to CSR#6 <br />
+      csrwi   0, 0x4 # write 0x4 to CSR#0 <br />
+    </code> <br />
+    
+    <p>Once an interrupt is raised it must be handled in the interrupt
+      handler created in this assignment. An interrupt handler is
+      analogous to a normal function but there are some key
+      differences. An interrupt can occur at any time, therefore the
+      handler must guarantee that all registers are restored to their
+      original values after the handler finishes. Thus, the handler must
+      save any register that it uses (not just the <code>s</code>
+      registers) and the handler must restore the original values to
+      these registers before returning. Also, the instruction
+      <code>uret</code> must be used to leave the interrupt handler
+      instead of the <code>jr ra</code> instruction that is used to
+      return from a normal function. Again, a student should not call functions exterior to the handler if they are using the user stack point.</p> 
+    
+  <h3 class="greentext">Keyboard & Display</h3>
+    <p>Use the <code>Keyboard and Display MMIO Simulator</code>, available under the 
+      "Tools" menu in RARS, to interact with the simulator. Display the 
+      simulator in the display section, and input commands in the keyboard 
+      section. Don't forget to click "Connect To Program" after assembling the program 
+      and before running it.</p>
+    <p>Generally, devices have two registers associated with them, a control, and a data 
+      register. The control register relays information about the device's state, and 
+      the data register relays data to or from a device. A description of the control 
+      and data registers for the keyboard and display can be found in the 
+      <a href="#MMIO">Memory-Mapped IO</a> section.</p>
+    <p>A separate keyboard interrupt occurs for every key pressed when the keyboard 
+      interrupts are enabled. Therefore, the user program receives one character at 
+      a time. 
+  <h3 class="greentext">Timer</h3>
+    <p>In RISC-V, timing functionality is managed by the timing hardware thread 
+     , maintaining the time asynchronously and allowing the program to raise 
+      an interrupt at a specific time. To do this the core keeps track of the time in 
+      the 64-bit register <code>time</code> which holds the current time (in milliseconds) 
+      since the program started. To generate a timer interrupt at a specified time, 
+      the value in the register <code>timecmp</code> must be set. Each time the timecmp
+       register is used, the student must reset the timecmp register with the new time 
+       each time . A description of the 
+      <code>time</code> and <code>timecmp</code> registers can be found in the 
+      <a href="#MMIO">Memory-Mapped IO</a> section. To simulate RISC-V timing functionality 
+      use the <code>Timer Tool</code> under the "Tools" menu in RARS. Don't forget 
+      to click "Connect To Program" and "Play" after assembling the program and before 
+      running it each time you run the program.</p> 
+  
+  <h2 class="greentext" style="clear:both"><a name="MMIO"></a>Memory-Mapped IO</h2>
+  
+  <p>Memory-mapped IO allows interaction with external devices through
+      an interface pretending to be system memory. This mapping allows
+      the processor to communicate with these devices using the
+      load-word and store-word instructions. Here are the memory
+      mappings and descriptions of important I/O registers for this
+      lab:</p>
+  
+    <img src="images/displayData.png" class="right" height="150" width="500">
+    <table border=1>
+      <tr>
+        <th>Register</th>
+        <th style="width: 15%;">Memory Address</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td >Keyboard control</td>
+        <td><code>0xFFFF0000</code></td>
+        <td>For keyboard interrupts to be enabled, bit 1 of this register must be set 
+          to 1; after the keyboard interrupt occurs, this bit is automatically reset 
+          to 0.</td>
+      </tr>
+      <tr>
+        <td>Keyboard data</td>
+        <td><code>0xFFFF0004</code></td>
+        <td>The ASCII value of the last key pressed is stored 
+          here.</td>
+      </tr>
+      <tr>
+        <td>Display control</td>
+        <td><code>0xFFFF0008</code></td>
+        <td>Bit 0 of this register indicates whether the processor can write to the 
+          display. While this bit is 0 the processor cannot write to the display. 
+          Thus, the program must wait until this bit is 1.</td>
+      </tr>
+      <tr>
+        <td>Display data</td>
+        <td><code>0xFFFF000C</code></td>
+        <td>When a character is placed into this register, given that the display control 
+          ready bit (bit 0) is 1, that character is drawn onto the display. If the 
+          character is the bell character (ASCII code <code>0x07</code>) the display will 
+          move the cursor and the bits 8-19 and 20-31 correspond to the row and column 
+          respectively. View the image.  </td>
+      </tr>
+      <tr>
+        <td>Time</td>
+        <td><code>0xFFFF0018</code></td>
+        <td>This is a read-only register that holds the time since the program has 
+          started in milliseconds.</td>
+      </tr>
+      <tr>
+        <td>Timecmp</td>
+        <td><code>0xFFFF0020</code></td>
+        <td>When the value in this register is less than or equal to the value in 
+          <code>time</code> a timer interrupt occurs. Writing to this register is 
+          required to set up a timer.</td>
+      </tr>
+    </table>
+  
+    <h2 class="greentext"><a name="RANDOM"></a>Random Number Generation</h2>
+    
+    <p>A solution to this lab must generate random numbers to determine
+      the coordinate of the apple </p>
+    
+    <p>Implement a Linear Congruential Generator (LCG).  An LCG is a
+      simple pseudorandom number generator (PRNG) algorithm defined as
+      the recurrence relation:</p>
+    
+    <p><code>X<sub>i</sub> = ( aX<sub>i-1</sub> + c ) % m</code></p>
+    
+    <p>Where <code>X<sub>0</sub></code>, <code>a</code>, <code>c</code>,
+      and <code>m</code> are constants. <code>X<sub>0</sub></code> is
+      the seed value, <code>a</code> is the multiplier, <code>c</code>
+      is the increment, and <code>m</code> is the modulus.</p>
+    
+    <p>The first randomly generated number is
+    <code>X<sub>1</sub></code>, the second is
+    <code>X<sub>2</sub></code>, and so on.</p>
+    
+    <p>With a PRNG, the sequence of generated numbers is always the 
+      same for the same values of <code>X<sub>0</sub></code>, <code>a</code>, 
+    <code>c</code>, <code>m</code>. This consistency will be important for debugging the solution to this lab.
+      <a target = "_blank" href="https://asecuritysite.com/encryption/linear">Here</a> is a useful tool 
+      for that generates a random sequence of numbers based on values of 
+      <code>X<sub>0</sub></code>, <code>a</code>, <code>c</code>, <code>m</code> that 
+      can be used to test the program. To learn more about linear 
+      congruential generators, view 
+      <a target = "_blank" href="https://en.wikipedia.org/wiki/Linear_congruential_generator">
+      this page</a>.</p>
+    
+      
+  <h2 class="greentext"><a name="CONSTRAINTS"></a>Constraints</h2>
+  
+      <p> Reading or printing syscalls cannot be used in this
+          program. Instead, the program must use the interrupt/poll
+          system to interact with the keyboard and the display.</p>
+    
+    <img src="images/exceptions.png" class="right" height="400" width="500">
+    
+      <p> When executing RARS with your own handler, runtime errors
+          won't be shown in RARS as usual. Thus, a section of the
+          handler that prints the line where an error occurred and the
+          error code is provided. Use the table to the right to identify
+          the error.</p>
+  
+      <p> Make sure the handler does not call any functions.
+        This ensures proper grading through the scripts and makes it easier to debug the code.
+      </p>
+    
+  
+  
+  
+      
+    <h3 class="greentext"><a name="FOREVER"></a>Loops and Flags</h3>
+    
+    <p> There are two phases in the execution of the game: reading the
+        level of the game; and playing the game. Each of these phases
+        can execute in a loop that changes the state of the display when
+        there is an interruption caused either by the input of a command
+        or by a timer. A possible design would be  to reprint the 
+        display for every iteration of the loop. However, such a design
+        could produce a flickering in the screen in certain types of
+        monitors. Therefore a better design is to have flags that
+        indicate when an action must be taken in the loop. For instance,
+        the display only needs to be reprinted when its content has
+        changed. Therefore the loop can simply check on specific flags
+        and only take action when action is needed.  Flags are variables
+        that can store either 0 or 1. You can use flags to determine
+        what should happen on the next iteration of the loop. By using
+        different flags for the separate tasks of the program, you can
+        ensure that you only execute tasks when needed.</p>
+  
+    <p> The exit conditions for the loops are as follows.  The
+      game-level screen loop exits once a valid input is received.  The
+      typing-screen loop exits once the timer has run down to zero
+      seconds or the snake hits a wall. At that point you can simply end the game by returning
+      from the <code>snakeGame</code> function(after you have restored all the necessary registers).  </p>
+    
+      <p>Here is an example of how you can use a flag to determine when
+        a program prints its output:</p> <ul> <li>Have a variable stored
+        in memory (<code>changed</code>) that contains the value:</li>
+        <ul>
+  
+    <li>  <code>0</code>, if the output <b>has not</b> changed since
+               it was last printed and thus doesn't need to be printed. </li>
+  
+    </li> <li><code>1</code>, if the output <b>has</b> changed
+                since it was last printed and thus should be
+                printed.</li>
+  
+      </ul> <li>Implement the control flow shown below
+        in the loop of the program. The idea behind this control flow is
+        to only print when there has been a change to the output.</li>
+        <img src="images/foreverLoop.png" height="264" width="300"/>
+      </ul>
+  
+      <p>Using flags in the loop also separates the code into
+        tasks making it easier to understand and debug.
+      </p>
+      <b>Note:</b> You don't have to follow this. You can come up with 
+      your own methods as long as your game runs properly.
+  
+  
+  
+  
+  
+      <h3 class="greentext"><a name="GLOBAL"></a>Global Variables</h3>
+      
+      <p>The following lines appear in the <code>.data</code> section of 
+      <code>common.s</code>:</p>
+      
+      <img src="images/CommonVariables.png" width="178" height="80"/> 
+      
+      <p>This is similar to defining four global variables. These
+        variables are used in the linear congruential generator and
+        should contain the values <code>X<sub>i</sub></code>,
+        <code>a</code>, <code>c</code>, and <code>m</code>
+        respectively. These variables <b> must be used</b> in the
+        <code>random</code> function so that the solution works with
+        grading scripts. For testing, initialize the first three values
+        to any value, but keep <code>mVar</code> as 9.</p>
+      
+        <p> You may add any other global variables that could be used to
+        help run your program.</p>
+    
+    <h3 class="greentext">Saving Registers in the Interrupt Handler</h3>
+      <p>When an interrupt is raised, the program is paused and execution is transferred to 
+        the interrupt handler. To ensure that the program can safely resume execution after 
+        returning from the handler, the registers used by the handler must be saved upon 
+        entering the interrupt handler and restored before returning. The registers cannot be 
+        saved using the stack pointer because the stack pointer may be corrupted. Therefore, in
+        <code>common.s</code> we have allocated memory labeled <code>iTrapData</code> where 
+        your handler may save registers. In <code>common.s</code> we have also placed the 
+        address of <code>iTrapData</code> into the control status register #64, 
+        <code>uscratch</code>. You can use <code>uscratch</code> and the CSR instruction 
+        <code>csrrw</code> to save and restore all the values of registers used in the 
+        handler.</p>
+      <p>After returning from the handler, all registers must have the same value as when the
+        program paused and <code>uscratch</code> should contain the address of the 
+        <code>iTrapData</code>. The first instruction executed in the handler and the last 
+        instruction executed before returning from the handler should be
+        <code>csrrw 	a0, 0x040, a0</code>, where <code>a0</code> is chosen by convention. 
+        Here is some sample code that saves two registers and <code>a0</code> in the 
+        interrupt trap data:</p>
+      <pre>
+        handler:
+    
+        # swap a0 and uscratch
+        csrrw   a0, 0x040, a0     # a0 <- Addr[iTrapData], uscratch <- PROGRAMa0 
+    
+        # save all used registers except a0
+        sw      t0, 0(a0)         # save PROGRAMt0
+        sw      s0, 4(a0)         # save PROGRAMs0
+    
+        # save a0
+        csrr    t0, 0x040         # t0 <- PROGRAMa0     
+        sw      t0, 8(a0)         # save PROGRAMa0 
+    
+        ... 
+      </pre>
+    <p><b>Non-re-entrant handler:</b> It is up to you how you manage the memory allocated for <code>iTrapData</code>. 
+      If you allocate a specific address to save a given register --- for example, register <code>s0</code> is always saved in <code>Addr[iTrapData]+4</code> --- then your handler is not <i>re-entrant</i>.
+       You cannot enable interruptions while you are handling an interruption because doing so could cause the first value of <code>s0</code> that you had saved to be overwritten.</p>
+    
+    <p><b>Re-entrant handler:</b> An elegant solution to create a re-entrant handler is to implement a stack in the memory area reserved for <code>iTrapData</code>. 
+      The solution would have to handle an <i>interrupt stack pointer</i>. It would have to ensure that space is allocated in this stack for a new <i>interruption frame</i> 
+      before interruptions are re-enabled. Once space is reserved in the interrupt stack to save the registers that the handler will use, then interrupts can safely be re-enabled. In this case we have a <i>re-entrant handler</i>.
+    
+    <p><b>It would be difficult to create a set of tests to determine if a handler is re-entrant. 
+      Therefore, in this lab we do not require the implementation of a re-entrant handler. It is acceptable to keep interruptions disabled while an interruption is being processed.</b></p>
+  
+      
+  
+  
+  
+  
+  
+  
+  
+  
+  <h2 class = "greentext"> Specifications </h2>
+  <p>
+    Write assembly code for the following functions in the file named <code>snake.s</code> 
+  </p>
+  <ul>
+    <li>
+      <code>snakeGame:</code>
+      <ul>
+      <li> Arguments </li>
+      <ul>
+      <li> None </li>
+      </ul>
+      <li> Return Values </li>
+      <ul>
+      <li> None </li>
+      </ul>
+      <li> Effect </li>
+      <ul>
+        <li>
+          Runs a simple snake game that a user can play with three different levels.
+        </li>
+      </ul>
+      <li>
+        Note
+      </li>
+      <ul>
+        <li>
+        This function executes the game-level-screen loop and the typing-screen loop. See <a href="FOREVER">Loops and Flags</a>
+        </li>
+      </ul>
+    </ul>
+    </li>
+    <li>
+      <code> handler: </code>
+      <ul>
+        <li> Effect
+          <ul>
+            <li> Handles all interrupts and exceptions. This handler should 
+              catch and handle keyboard and timer interrupts. A block of code <code> handlerTerminate</code>
+              is provided. It should catch interrupts/exceptions unhandled by the student handler, terminating the program and 
+              providing debugging messages
+            </li>
+          </ul>
+        </li>
+        <li> Note: 
+          <ul>
+            <li> This is <B>not</B> a function and should <B>never</B> be called
+            with <code> jal ra, handler</code>. Instead the address of the handler should be stored in the <code>utvec</code> control status
+          register (<code>CSR #5</code>) at the start of the program. When an interrupt
+          is raised, the execution of the program jumps to the instruction address stored in <code> utvec</code> </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><code>random:</code></li>
+    
+    <ul>
+      <li> Arguments </li>
+      <ul>
+      <li> None </li>
+      </ul>
+      <li>Return Values:</li>
+      <ul>
+        <li><code>a0</code>: a pseudorandom number, <code>X<sub>i</sub></code>, between 
+          0 and 8</li>
+      </ul>
+      <li>Effect:</li>
+      <ul>
+        <li>Using the LCG algorithm, calculate <code>X<sub>i</sub></code> from 
+          <code>X<sub>i-1</sub></code>, <code>a</code>, <code>c</code>, and
+          <code>m</code>. Replace <code>X<sub>i-1</sub></code> in memory with the newly 
+          generated <code>X<sub>i</sub></code>.
+      </ul>
+      <li>Note:</li>
+      <ul>
+        
+        <li>This function <b>must use</b> the global variables
+          <code>XiVar</code>, <code>aVar</code>, <code>cVar</code>, and
+          <code>mVar</code> from the data section of
+          <code>common.s</code> (see the subsection <a
+          href="#GLOBAL">Global Variables</a> in the <a
+          href="#CONSTRAINTS">Constraints</a> section for information on
+          these variables). Before returning, the generated number
+          <code>X<sub>i</sub></code> <b>must</b> be stored in
+          <code>XiVar</code>.  It should be possible to call
+          <code>random</code> multiple times, back-to-back. Therefore
+          any needed state update to the global variables must be
+          performed in the function.</li>
+        
+          <li>Although the square has 11 rows and 21 columns(the ranges are different), we 
+            don't want to write two random functions to generate random numbers for the row and 
+            column respectively. We only have to write one random function that returns a 
+            value between 0 and 8. In this case, there's a part of the square where the apple 
+            never appears. Please do not worry about this case.</li>
+  
+        <li>This function returns a value between 0 and 8, but the row number 
+          and column number of an apple should be between 1 and 9. As a result,
+          you should add an additional 1 to the variables where you store the coordinate
+          of the apple after invoking this function.</li>
+        
+      </ul>
+    </ul>
+    <li>
+      <code> printAllWalls</code><B>(the codes for this function have been given to you)</B>
+      </li>
+      <ul>
+        <li> Arguments </li>
+      <ul>
+      <li> None </li>
+      </ul>
+      <li> Return Values </li>
+      <ul>
+      <li> None </li>
+      </ul>
+        <li>
+          Effect: <br>
+          <ul>
+            <li>Print all the the walls on the screen.</li>
+          </ul>
+          
+        </li>
+      </ul>
+  </ul>
+  
+  
+  
+  
+  <p>
+  
+  
+    <B> The functions below are optional suggestions</B>. These are not required and will not 
+    be tested when grading this assignment. These function specifications are provided to help you understand the different
+    modular parts of this assignment. This can help with the debugging process. Students are free to add any other functions that 
+    help them create their solution.  
+  </p>
+  <ul>
+    <li>
+      <code> drawSnake </code> <B>(optional)</B>
+      <ul>
+        <li>
+          <B>Effect:</B> <br>
+          Draw the snake on the screen.
+        </li>
+      </ul>
+    </li>
+    <li>
+      <code>checkHitting</code> <B>(optional)</B>
+      <ul>
+        <li>
+          <B> Effect</B> <br>
+          After the snake moves forward by one unit, this function can be called to check if the snake hits a wall.
+        </li>
+      </ul>
+    </li>
+    <li>
+      <code>checkEatingApple</code> <B>(optional)</B>
+      <ul>
+        <li>
+          <B> Effect</B> <br>
+          After the snake moves forward by one unit, this function can be called to check if the snake is able to eat the current apple.
+        </li>
+      </ul>
+    </li>
+  </ul>
+  
+  
+  <p><b>Write additional functions as needed.</b> Code from the
+    materials provided in this course can be used in the solution as
+    long as the source is acknowledged. For example,
+    <code>displayDemo.s</code> in <code>Code/Demo/</code> may be helpful
+    for printing to the <code>Keyboard and Display MMIO Simulator</code>
+  display.</p>
+  
+    <b>Hints:</b>
+  
+  <ul>
+  
+  
+    <li> The coordinates for the snake head and for the snake body can
+         be stored in a stack.  A global variable can be used to
+         indicate that there has been a change to the position of the
+         snake. There is no need to update the screen as long as this
+         flag is 0. Every second, when the time interruption occurs, the
+         position of the snake must be updated and this flag is changed
+         to 1 to indicate a change in the screen. This flag can be
+         checked by the infinite loop to decide if the screen needs to
+         be redrawn. Once the screen is redrawn this flag should be
+         changed back to 0. </li>
+  
+      
+    <li> The following boolean expression can be used to check if the
+         snake has hit a wall: <code>(row <= 0 || row >= 10 || col <= 0
+         || col >= 20)</code>. </li>
+  
+    <li> To check if the snake eats an apple, compare the coordinates of
+          the apple and the snake head. </li>
+  
+    <li> Consider the case when the apple happens to be generated right
+         on the snake body. Think about how you will add the characters
+         to the screen so that this apple is not covered by the snake
+         body. </li>
+    
+    <li> You can arrange one or two stacks to store the coordinates of
+         the snake head and of the snake body. </li>
+  
+    <li> In all the test cases the values for the timer and for the
+         number of points are never higher than 999 </li>
+  
+    </ul>
+  
+  
+  
+  
+  
+    <h2 class="greentext">Resources</h2>
+  
+    <ul>
+  
+      <li>Slides used for in-class introduction of the lab (<a
+      href="../Slides/Lab_Snake_Game_Slides.pptx">.ppt</a>) (<a target
+      = "_blank"
+      href="../Slides/Lab_Snake_Game_Slides.pdf">.pdf</a>)</li>
+      <li> Slides used for the lab presentation (<a href="../Slides/Lab_Snake_Game_Slides.pptx">.ppt</a>) (<a target = "_blank" 
+      href="../Slides/Lab_Snake_Game_Slides.pdf">.pdf</a>)</li>
+  
+    </ul>
+  
+  
+  
+  
+  
+  
+  
+    <h2 class="greentext">Marking Guide</h2>
+    <p> Assignments too short to be adequately judged for code quality will be given a 
+      zero.</p>
+    <ul>
+    
+      <li>10% For proper startup screen and correct output when a number is entered</li>
+      <li>10% For proper LCG implementation</li>
+      <li>20% For proper timer behaviour</li>
+      <li>40% For proper snake and apple behaviour, and display of walls</li>
+      <li>20% For code cleanliness, readability, and comments</li>
+  
+      <li> Here is the <a href="MarkSheet.txt">MarkSheet</a> used for grading</li>
+    </ul>
+  
+  
+  
+  
+  
+  
+    
+    <h2 class="greentext">Submission</h2>
+    <p> There is a single file to be submitted for this lab: </p>
+    <ul>
+      <li>File <code>snake.s</code> should contain the code for both the interrupt handler 
+        and the function <code>snakeGame</code>. 
+      <ul>
+        <li><b>Do not</b> add a <code>main</code> label to this file</li>
+        <li><b>Do not</b> modify the line <code>.include "common.s"</code></li>
+        <li><b>Keep</b> this file in the <code>Code</code> folder of the git repository</li>
+      </ul>
+    </ul>
+  </div>
+  </body>
+  </html>
+  
